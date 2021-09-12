@@ -6,26 +6,27 @@ import json
 
 
 class Blockchain:
+
     def __init__(self):
         self.current_transactions = []
         self.chain = []
-        #so it appears ONLY ONCE, use set
+        #so it appears ONLY ONCE
         self.nodes = set()
 
-        # Create the genesis block
+        # Create genesis block
         self.new_block(previous_hash='1', proof=100)
+
 
     def register_node(self, address):
         """
         Add a new node to the list of nodes
-        :param address: Address of node. Eg. 'http://192.168.0.5:5000'
+        :param address: Address of node (http://192.168.0.5:5000)
         """
-
         parsed_url = urlparse(address)
         if parsed_url.netloc:
             self.nodes.add(parsed_url.netloc)
         elif parsed_url.path:
-            # Accepts an URL without scheme like '192.168.0.5:5000'.
+            # Accepts URL without scheme like IP:PORT '192.168.0.5:5000'
             self.nodes.add(parsed_url.path)
         else:
             raise ValueError('Invalid URL')
@@ -37,7 +38,6 @@ class Blockchain:
         :param chain: A blockchain
         :return: True if valid, False if not
         """
-
         last_block = chain[0]
         current_index = 1
 
@@ -57,7 +57,6 @@ class Blockchain:
 
             last_block = block
             current_index += 1
-
         return True
 
     def resolve_conflicts(self):
@@ -66,7 +65,6 @@ class Blockchain:
         by replacing our chain with the longest one in the network.
         :return: True if our chain was replaced, False if not
         """
-
         neighbours = self.nodes
         new_chain = None
 
@@ -90,8 +88,8 @@ class Blockchain:
         if new_chain:
             self.chain = new_chain
             return True
-
         return False
+
 
     def new_block(self, proof, previous_hash):
         """
@@ -100,7 +98,6 @@ class Blockchain:
         :param previous_hash: Hash of previous Block
         :return: New Block
         """
-
         block = {
             'index': len(self.chain) + 1,
             'timestamp': time(),
@@ -109,11 +106,11 @@ class Blockchain:
             'previous_hash': previous_hash or self.hash(self.chain[-1]),
         }
 
+        self.chain.append(block)
         # Reset current transactions
         self.current_transactions = []
-
-        self.chain.append(block)
         return block
+
 
     def new_transaction(self, sender, recipient, amount):
         """
@@ -131,43 +128,40 @@ class Blockchain:
 
         return self.last_block['index'] + 1
 
-    #Setter of last block
+
     @property
     def last_block(self):
         return self.chain[-1]
 
-    #Can be called without an object of the class
+
     @staticmethod
     def hash(block):
         """
         Creates a SHA-256 hash of a Block
         :param block: Block
         """
-
         # Dict must be ordered, or we'll have inconsistent hashes
         block_string = json.dumps(block, sort_keys=True).encode()
         return hashlib.sha256(block_string).hexdigest()
+
 
     def proof_of_work(self, last_block):
         """
         Simple Proof of Work Algorithm:
          - Find a number p' such that hash(pp') contains leading 4 zeroes
-         - Where p is the previous proof, and p' is the new proof
-         
+         - Where p is the previous proof and p' is the new proof
         :param last_block: <dict> last Block
         :return: <int>
         """
-
         last_proof = last_block['proof']
         last_hash = self.hash(last_block)
 
         proof = 0
         while self.valid_proof(last_proof, proof, last_hash) is False:
             proof += 1
-
         return proof
 
-    #Can be called without an object of the class
+
     @staticmethod
     def valid_proof(last_proof, proof, last_hash):
         """
@@ -177,7 +171,6 @@ class Blockchain:
         :param last_hash: <str> The hash of the Previous Block
         :return: <bool> True if correct, False if not.
         """
-
         guess = f'{last_proof}{proof}{last_hash}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:4] == "0000"

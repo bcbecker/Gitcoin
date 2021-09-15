@@ -10,7 +10,6 @@ class Blockchain:
     def __init__(self):
         self.current_transactions = []
         self.chain = []
-        #so it appears ONLY ONCE
         self.nodes = set()
 
         # Create genesis block
@@ -68,7 +67,7 @@ class Blockchain:
         neighbours = self.nodes
         new_chain = None
 
-        # Chains longer than ours
+        # Current chains length
         max_length = len(self.chain)
 
         # Grab and verify the chains from all the nodes in our network
